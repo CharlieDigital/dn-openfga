@@ -1,0 +1,58 @@
+model
+  schema 1.1
+
+type user
+
+# See: https://openfga.dev/docs/configuration-language
+# Google Drive: https://openfga.dev/docs/modeling/advanced/gdrive
+# Entitlements: https://openfga.dev/docs/modeling/advanced/entitlements
+# GitHub: https://openfga.dev/docs/modeling/advanced/github
+type group
+  relations
+    define member: [user]         # Direct membership: users can belong to groups
+    define org: [org]             # Hierarchy: groups can belong to organizations
+
+type org
+  relations
+    define group: [group]  # groups can belong to orgs
+    define member: [user] or member from group  # users can be direct members, or members through groups
+
+type form
+  relations
+    # These are "is" relations
+    define reader: [user, group, org]      # Can view/read the form
+    define editor: [user, group, org]      # Can modify/edit the form
+    define approver: [user, group, org]    # Can approve form submissions
+    define publisher: [user, group, org]   # Can publish/make form live
+
+    # These are "can" permissions
+    # Read permission: Direct readers OR inheritors from group/org members
+    define read: reader or editor or approver or publisher or member from reader or member from editor or member from approver or member from publisher
+
+    # Edit permission: Direct editors OR members of groups/orgs that are editors
+    define edit: editor or member from editor
+
+    # Approve permission: Direct approvers OR members of groups/orgs that are approvers
+    define approve: approver or member from approver
+
+    # Publish permission: Direct publishers OR members of groups/orgs that are publishers
+    define publish: publisher or member from publisher
+
+type document
+  relations
+    define reader: [user, group, org]      # Can view/read the document
+    define editor: [user, group, org]      # Can modify/edit the document
+    define approver: [user, group, org]    # Can approve document changes
+    define publisher: [user, group, org]   # Can publish/finalize document
+
+    # Read permission: Direct readers OR inheritors from group/org members
+    define read: reader or editor or approver or publisher or member from reader or member from editor or member from approver or member from publisher
+
+    # Edit permission: Direct editors OR members of groups/orgs that are editors
+    define edit: editor or member from editor
+
+    # Approve permission: Direct approvers OR members of groups/orgs that are approvers
+    define approve: approver or member from approver
+
+    # Published permission: Direct publishers OR members of groups/orgs that are publishers
+    define publish: publisher or member from publisher
