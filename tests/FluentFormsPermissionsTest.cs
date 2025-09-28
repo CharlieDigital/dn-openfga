@@ -194,15 +194,15 @@ public class FluentFormsPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Assign<Org, Group>("motion_299", "group", "managers_team_299")
-            .Add<Group, User>("managers_team_299", "member", "casey_299")
-            .Assign<Form, Org>("299", "editor", "motion_299")
+            .Assign<Org, Group>("motion_299", o => o.Group, "managers_team_299")
+            .Add<Group, User>("managers_team_299", g => g.Member, "casey_299")
+            .Assign<Form, Org>("299", f => f.Editor, "motion_299")
             .SaveChangesAsync(CancellationToken.None);
 
         var caseyCanAccessForm299 = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("299", "edit", "casey_299")
+            .Can<Form, User>("299", f => f.Perform.Edit, "casey_299")
             .ValidateSingleAsync(CancellationToken.None);
 
         Assert.True(caseyCanAccessForm299);
