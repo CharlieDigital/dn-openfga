@@ -18,8 +18,8 @@ public partial class PermissionBuilder
         string relation,
         string userId
     )
-        where TTarget : Res
-        where TGroup : Res
+        where TTarget : IResource
+        where TGroup : IAccessor
     {
         var target = MakeEntityName<TTarget>(targetId);
         var user = MakeEntityName<TGroup>(userId);
@@ -42,8 +42,8 @@ public partial class PermissionBuilder
         Expression<Func<TTarget, object>> relationExpression,
         string userId
     )
-        where TTarget : Res
-        where TGroup : Res =>
+        where TTarget : IResource
+        where TGroup : IAccessor =>
         Assign<TTarget, TGroup>(targetId, relationExpression.ResolveName(), userId);
 
     /// <summary>
@@ -55,8 +55,8 @@ public partial class PermissionBuilder
     /// <typeparam name="TGroup">The type of the user.</typeparam>
     /// <returns></returns>
     public PermissionBuilder AssignAlso<TTarget, TGroup>(string targetId, string relation)
-        where TTarget : Res
-        where TGroup : Res
+        where TTarget : IResource
+        where TGroup : IAccessor
     {
         if (_lastUserId == null)
         {
@@ -78,8 +78,8 @@ public partial class PermissionBuilder
         string targetId,
         Expression<Func<TTarget, object>> relationExpression
     )
-        where TTarget : Res
-        where TGroup : Res
+        where TTarget : IResource
+        where TGroup : IAccessor
     {
         if (_lastUserId == null)
         {

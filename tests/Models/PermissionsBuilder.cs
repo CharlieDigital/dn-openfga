@@ -29,8 +29,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
         Expression<Func<TRes, object>> relationExpression,
         string userId
     )
-        where TRes : Res
-        where TUser : Accessor =>
+        where TRes : IResource
+        where TUser : IAccessor =>
         Add<TRes, TUser>(objectId, relationExpression.ResolveName(), userId);
 
     /// <summary>
@@ -43,8 +43,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
     public PermissionBuilder Add<TRes, TUser>(string objectId, string relation, string userId)
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         var resource = MakeEntityName<TRes>(objectId);
         var user = MakeEntityName<TUser>(userId);
@@ -63,8 +63,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
     public PermissionBuilder AddAlso<TRes, TUser>(string objectId, string relation)
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         if (_lastUserId == null)
         {
@@ -86,8 +86,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
         string objectId,
         Expression<Func<TRes, object>> relationExpression
     )
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         if (_lastUserId == null)
         {
@@ -111,8 +111,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
         string relation,
         params string[] userIds
     )
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         foreach (var userId in userIds)
         {
@@ -133,8 +133,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
     public PermissionBuilder Revoke<TRes, TUser>(string objectId, string relation, string userId)
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         var resource = MakeEntityName<TRes>(objectId);
         var user = MakeEntityName<TUser>(userId);
@@ -158,8 +158,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
         string relation,
         params string[] userIds
     )
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         foreach (var userId in userIds)
         {

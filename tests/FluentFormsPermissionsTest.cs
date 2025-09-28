@@ -186,6 +186,11 @@ public class FluentFormsPermissionsTest
         Assert.True(accessToAll);
     }
 
+    /// <summary>
+    /// This test case shows transitive assignment of permissions where an org
+    /// has a group, the group has a user, and an entitlement is created on the
+    /// form for the org.  A user in the group should be able to access the form.
+    /// </summary>
     [Fact]
     public async Task Can_Check_Transitive_Permissions_Via_Group_Fluently()
     {

@@ -19,8 +19,8 @@ public class PermissionsIntrospector(OpenFgaClient client)
         string relationName,
         CancellationToken cancellationToken
     )
-        where TRes : Res
-        where TUser : Accessor
+        where TRes : IResource
+        where TUser : IAccessor
     {
         var user = MakeEntityName<TUser>(userId);
         var resource = MakeEntityName<TRes>();
