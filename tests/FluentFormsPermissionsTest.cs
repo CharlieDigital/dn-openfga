@@ -203,7 +203,7 @@ public class FluentFormsPermissionsTest
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("299", f => f.Perform.Edit, "casey_299")
-            .ValidateSingleAsync(CancellationToken.None);
+            .ValidateAllAsync(CancellationToken.None);
 
         Assert.True(caseyCanAccessForm299);
     }
