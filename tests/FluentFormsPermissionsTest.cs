@@ -187,7 +187,7 @@ public class FluentFormsPermissionsTest
     }
 
     [Fact]
-    public async Task Can_Check_Transitive_Permissions_Via_Group_Fluenty()
+    public async Task Can_Check_Transitive_Permissions_Via_Group_Fluently()
     {
         var client = _fixture.GetClient(STORE_ID);
 
