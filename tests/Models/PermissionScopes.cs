@@ -17,7 +17,12 @@ public sealed record Form(
 /// <summary>
 /// This is an organization resource type; we only use it for the name.
 /// </summary>
-public sealed record Org(string Member) : Res;
+public sealed record Org(string Member, string Group) : Res;
+
+/// <summary>
+/// This is a group resource type; we only use it for the name.
+/// </summary>
+public sealed record Group(string Member) : Res;
 
 /// <summary>
 /// Base type for accessors (users, groups, orgs)

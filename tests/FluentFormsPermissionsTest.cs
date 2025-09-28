@@ -185,4 +185,26 @@ public class FluentFormsPermissionsTest
         // Only a single object
         Assert.True(accessToAll);
     }
+
+    [Fact]
+    public async Task Can_Check_Transitive_Permissions_Via_Group_Fluenty()
+    {
+        var client = _fixture.GetClient(STORE_ID);
+
+        await Permissions
+            .WithClient(client)
+            .ToMutate()
+            .Assign<Org, Group>("motion_299", "group", "managers_team_299")
+            .Add<Group, User>("managers_team_299", "member", "casey_299")
+            .Assign<Form, Org>("299", "editor", "motion_299")
+            .SaveChangesAsync(CancellationToken.None);
+
+        var caseyCanAccessForm299 = await Permissions
+            .WithClient(client)
+            .ToValidate()
+            .Can<Form, User>("299", "edit", "casey_299")
+            .ValidateSingleAsync(CancellationToken.None);
+
+        Assert.True(caseyCanAccessForm299);
+    }
 }

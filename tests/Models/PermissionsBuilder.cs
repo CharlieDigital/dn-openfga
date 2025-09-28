@@ -8,7 +8,7 @@ using static Permissions;
 /// <summary>
 /// Builder class to create a set of permissions and grant them in one call.
 /// </summary>
-public class PermissionBuilder(OpenFgaClient client, bool disableTransactions = false)
+public partial class PermissionBuilder(OpenFgaClient client, bool disableTransactions = false)
 {
     private readonly List<(string ObjectId, string Relation, string UserId)> _newGrants = [];
     private readonly List<(string ObjectId, string Relation, string UserId)> _removedGrants = [];
