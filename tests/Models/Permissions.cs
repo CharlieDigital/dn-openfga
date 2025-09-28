@@ -11,9 +11,9 @@ public class Permissions
     /// a permission builder and a permission checker.
     /// </summary>
     public static (
-        Func<PermissionBuilder> Mutate,
-        Func<PermissionChecker> Validate,
-        Func<PermissionsIntrospector> Introspect
+        Func<PermissionBuilder> ToMutate,
+        Func<PermissionChecker> ToValidate,
+        Func<PermissionsIntrospector> ToIntrospect
     ) WithClient(OpenFgaClient client, bool disableTransactions = false)
     {
         return (
@@ -28,9 +28,9 @@ public class Permissions
     /// a permission builder and a permission checker.
     /// </summary>
     public static (
-        Func<PermissionBuilder> Mutate,
-        Func<PermissionChecker> Validate,
-        Func<PermissionsIntrospector> Introspect
+        Func<PermissionBuilder> ToMutate,
+        Func<PermissionChecker> ToValidate,
+        Func<PermissionsIntrospector> ToIntrospect
     ) WithClientNoTx(OpenFgaClient client)
     {
         return (
