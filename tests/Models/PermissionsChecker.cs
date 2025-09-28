@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
 using OpenFga.Sdk.Model;
@@ -8,6 +9,24 @@ using OpenFga.Sdk.Model;
 public class PermissionChecker(OpenFgaClient client)
 {
     private readonly List<(string ObjectId, string Relation, string UserId)> _checks = [];
+    private string? _lastUserId;
+
+    /// <summary>
+    /// Performs a single permission check using a typed relation expression.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation expression that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker Can<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression,
+        string userId
+    )
+        where TRes : Res
+        where TUser : Accessor =>
+        Can<TRes, TUser>(objectId, relationExpression.ResolveName(), userId);
 
     /// <summary>
     /// Performs a single permission check
@@ -23,10 +42,52 @@ public class PermissionChecker(OpenFgaClient client)
     {
         var resourceType = typeof(TRes).Name.ToLower();
         var userType = typeof(TUser).Name.ToLower();
+        _lastUserId = userId;
 
         _checks.Add(($"{resourceType}:{objectId}", relation, $"{userType}:{userId}"));
 
         return this;
+    }
+
+    /// <summary>
+    /// Performs a single permission check for the last user checked.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relation">The relation that is linking the user to the object.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker CanAlso<TRes, TUser>(string objectId, string relation)
+        where TRes : Res
+        where TUser : Accessor
+    {
+        if (_lastUserId == null)
+        {
+            throw new InvalidOperationException("No previous user to add relation for.");
+        }
+
+        return Can<TRes, TUser>(objectId, relation, _lastUserId);
+    }
+
+    /// <summary>
+    /// Performs a single permission check for the last user checked.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation expression that is linking the user to the object.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker CanAlso<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression
+    )
+        where TRes : Res
+        where TUser : Accessor
+    {
+        if (_lastUserId == null)
+        {
+            throw new InvalidOperationException("No previous user to add relation for.");
+        }
+
+        return Can<TRes, TUser>(objectId, relationExpression.ResolveName(), _lastUserId);
     }
 
     /// <summary>
@@ -40,6 +101,33 @@ public class PermissionChecker(OpenFgaClient client)
     public PermissionChecker Has<TRes, TUser>(string objectId, string relation, string userId)
         where TRes : Res
         where TUser : Accessor => Can<TRes, TUser>(objectId, relation, userId);
+
+    /// <summary>
+    /// Performs a single permission check (alias for Can) using the last user checked.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relation">The relation that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker HasAlso<TRes, TUser>(string objectId, string relation)
+        where TRes : Res
+        where TUser : Accessor => CanAlso<TRes, TUser>(objectId, relation);
+
+    /// <summary>
+    /// Performs a single permission check (alias for Can)
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation expression that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker HasAlso<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression
+    )
+        where TRes : Res
+        where TUser : Accessor => CanAlso<TRes, TUser>(objectId, relationExpression);
 
     /// <summary>
     /// Validates the first permission check that was added.  Ignores any others.

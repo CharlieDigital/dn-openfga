@@ -6,12 +6,18 @@ public abstract record Res;
 /// <summary>
 /// This is a form resource type; we only use it for the name.
 /// </summary>
-public sealed record Form : Res;
+public sealed record Form(
+    string Reader,
+    string Editor,
+    string Approver,
+    string Publisher,
+    (string Edit, string Read, string Approve, string Publish) Perform
+) : Res;
 
 /// <summary>
 /// This is an organization resource type; we only use it for the name.
 /// </summary>
-public sealed record Org : Res;
+public sealed record Org(string Member) : Res;
 
 /// <summary>
 /// Base type for accessors (users, groups, orgs)

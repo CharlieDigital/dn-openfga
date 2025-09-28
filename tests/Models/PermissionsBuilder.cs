@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Security;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
@@ -11,6 +12,26 @@ public class PermissionBuilder(OpenFgaClient client, bool disableTransactions = 
 {
     private readonly List<(string ObjectId, string Relation, string UserId)> _newGrants = [];
     private readonly List<(string ObjectId, string Relation, string UserId)> _removedGrants = [];
+    private string? _lastUserId;
+
+    /// <summary>
+    /// Takes an expression for the resource type to get the property name.
+    /// </summary>
+    /// <param name="objectId"></param>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    /// <returns>The permission builder to continue to chain.</returns>
+    public PermissionBuilder Add<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression,
+        string userId
+    )
+        where TRes : Res
+        where TUser : Accessor =>
+        Add<TRes, TUser>(objectId, relationExpression.ResolveName(), userId);
 
     /// <summary>
     /// Add a single relation.
@@ -27,9 +48,53 @@ public class PermissionBuilder(OpenFgaClient client, bool disableTransactions = 
     {
         var resource = MakeEntityName<TRes>(objectId);
         var user = MakeEntityName<TUser>(userId);
+        _lastUserId = userId;
 
         _newGrants.Add(($"{resource}", relation, $"{user}"));
         return this;
+    }
+
+    /// <summary>
+    /// Add a single relation for the last user added.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relation">The relation that is linking the user to the object.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    /// <returns>The permission builder to continue to chain.</returns>
+    public PermissionBuilder AddAlso<TRes, TUser>(string objectId, string relation)
+        where TRes : Res
+        where TUser : Accessor
+    {
+        if (_lastUserId == null)
+        {
+            throw new InvalidOperationException("No previous user to add relation for.");
+        }
+
+        return Add<TRes, TUser>(objectId, relation, _lastUserId);
+    }
+
+    /// <summary>
+    /// Add a single relation for the last user added.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation that is linking the user to the object.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    /// <returns>The permission builder to continue to chain.</returns>
+    public PermissionBuilder AddAlso<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression
+    )
+        where TRes : Res
+        where TUser : Accessor
+    {
+        if (_lastUserId == null)
+        {
+            throw new InvalidOperationException("No previous user to add relation for.");
+        }
+
+        return Add<TRes, TUser>(objectId, relationExpression.ResolveName(), _lastUserId);
     }
 
     /// <summary>
