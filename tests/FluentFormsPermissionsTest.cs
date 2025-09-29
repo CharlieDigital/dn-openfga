@@ -23,7 +23,7 @@ public class FluentFormsPermissionsTest
             .Add<Form, User>("223", "editor", "alice")
             .Add<Form, User>("223", "editor", "bob")
             .AddMany<Form, User>("223", "reader", ["carol", "dave", "eve"])
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(5, added.Length);
         Assert.Empty(revoked);
@@ -38,13 +38,13 @@ public class FluentFormsPermissionsTest
             .WithClient(client)
             .ToMutate()
             .Add<Form, User>("224", "editor", "alice")
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var canAliceEdit = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("224", "edit", "alice")
-            .ValidateSingleAsync(CancellationToken.None);
+            .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.True(canAliceEdit);
     }
@@ -58,19 +58,19 @@ public class FluentFormsPermissionsTest
             .WithClient(client)
             .ToMutate()
             .Add<Form, User>("225", "editor", "alice")
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await Permissions
             .WithClient(client)
             .ToMutate()
             .Revoke<Form, User>("225", "editor", "alice")
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var canAliceEdit = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("225", "edit", "alice")
-            .ValidateSingleAsync(CancellationToken.None);
+            .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.False(canAliceEdit);
     }
@@ -85,14 +85,14 @@ public class FluentFormsPermissionsTest
             .ToMutate()
             .Add<Form, User>("226", "editor", "alice")
             .Add<Org, User>("motion", "member", "alice")
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var allAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("226", "edit", "alice")
             .Has<Org, User>("motion", "member", "alice")
-            .ValidateAllAsync(CancellationToken.None);
+            .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(allAllowed);
     }
@@ -107,14 +107,14 @@ public class FluentFormsPermissionsTest
             .ToMutate()
             .Add<Form, User>("235", "editor", "alice")
             .Add<Org, User>("acme_235", "member", "alice") // 👈 Alice is now in Acme.
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var allAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("235", "edit", "alice")
             .Has<Org, User>("motion_235", "member", "alice") // 👈 Alice is NOT in Motion.
-            .ValidateAllAsync(CancellationToken.None);
+            .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.False(allAllowed);
     }
@@ -129,14 +129,14 @@ public class FluentFormsPermissionsTest
             .ToMutate()
             .Add<Form, User>("239", "editor", "alice")
             .Add<Org, User>("acme_239", "member", "alice") // 👈 Alice is now in Acme.
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var someAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("239", "edit", "alice")
             .HasAlso<Org, User>("motion_239", "member") // 👈 Alice is NOT in Motion.
-            .ValidateAnyAsync(CancellationToken.None);
+            .ValidateAnyAsync(TestContext.Current.CancellationToken);
 
         Assert.True(someAllowed);
     }
@@ -151,12 +151,16 @@ public class FluentFormsPermissionsTest
             .ToMutate()
             .Add<Form, User>("240", "editor", "alice")
             .Add<Org, User>("acme_240", "member", "alice") // 👈 Alice is now in Acme.
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var objects = await Permissions
             .WithClient(client)
             .ToIntrospect()
-            .ListObjectsForUserAsync<Form, User>("alice", "editor", CancellationToken.None);
+            .ListObjectsForUserAsync<Form, User>(
+                "alice",
+                "editor",
+                TestContext.Current.CancellationToken
+            );
 
         // Only a single object
         Assert.Contains("form:240", objects);
@@ -173,14 +177,14 @@ public class FluentFormsPermissionsTest
             .Add<Form, User>("241", r => r.Editor, "alice")
             .AddAlso<Form, User>("242", r => r.Editor)
             .AddAlso<Org, User>("acme_241", r => r.Member)
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var accessToAll = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("241", r => r.Perform.Edit, "alice")
             .CanAlso<Form, User>("242", r => r.Perform.Edit)
-            .ValidateAllAsync(CancellationToken.None);
+            .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         // Only a single object
         Assert.True(accessToAll);
@@ -202,13 +206,13 @@ public class FluentFormsPermissionsTest
             .Add<Org, Group>("motion_299", o => o.Group, "managers_team_299")
             .Add<Group, User>("managers_team_299", g => g.Member, "casey_299")
             .Add<Form, Org>("299", f => f.Editor, "motion_299")
-            .SaveChangesAsync(CancellationToken.None);
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var caseyCanAccessForm299 = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<Form, User>("299", f => f.Perform.Edit, "casey_299")
-            .ValidateAllAsync(CancellationToken.None);
+            .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(caseyCanAccessForm299);
     }

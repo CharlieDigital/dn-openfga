@@ -19,7 +19,7 @@ public class PermissionsIntrospector(OpenFgaClient client)
     public async Task<IEnumerable<string>> ListObjectsForUserAsync<TRes, TUser>(
         string userId,
         string relationName,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where TRes : IResource
         where TUser : IAccessor
@@ -49,7 +49,7 @@ public class PermissionsIntrospector(OpenFgaClient client)
     public async Task<IEnumerable<string>> ListObjectsForUserAsync<TRes, TUser>(
         string userId,
         Expression<Func<TRes, object>> relationExpression,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where TRes : IResource
         where TUser : IAccessor =>
@@ -71,7 +71,7 @@ public class PermissionsIntrospector(OpenFgaClient client)
     public async Task<IEnumerable<string>> ListUsersForObjectAsync<TRes, TUser>(
         string objectId,
         string relationName,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where TRes : IResource
         where TUser : IAccessor
@@ -103,7 +103,7 @@ public class PermissionsIntrospector(OpenFgaClient client)
     public async Task<IEnumerable<string>> ListUsersForObjectAsync<TRes, TUser>(
         string objectId,
         Expression<Func<TRes, object>> relationExpression,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where TRes : IResource
         where TUser : IAccessor =>
