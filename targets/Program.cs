@@ -1,9 +1,13 @@
-﻿using DotNet.Testcontainers.Builders;
+﻿using System.Text;
+using DotNet.Testcontainers.Builders;
+using Humanizer;
+using OpenFga.Sdk.Model;
+using Org.BouncyCastle.Crypto.Modes;
 using static Bullseye.Targets;
 
 // docker run -v $(pwd):/workspace -w /workspace openfga/cli model transform --file ./tests/fga-model.fga --output-format json > ./tests/fga-model.json
 Target(
-    "default",
+    "transform-fga",
     static async () =>
     {
         Console.WriteLine(
@@ -66,5 +70,117 @@ Target(
         }
     }
 );
+
+// Perform the transform of the model to C# by reading the JSON file.
+Target(
+    "create-model",
+    static () =>
+    {
+        var json = File.ReadAllText(Path.Combine("tests", "fga-model.json"));
+
+        // Read the type definitions from the JSON
+        var types = WriteAuthorizationModelRequest.FromJson(json).TypeDefinitions;
+
+        var buffer = new StringBuilder();
+        buffer.AppendLine("// This file is auto-generated from fga-model.fga");
+        buffer.AppendLine("#pragma warning disable SA1600 // Auto-generated code");
+
+        // For each type, we generate a snippet of C# code by reading the relations
+        // and creating properties for each relation.
+        foreach (var type in types)
+        {
+            if (type.Relations == null)
+            {
+                buffer.AppendLine($"public sealed record {type.Type.Dehumanize()} : IAccessor;\n");
+                continue;
+            }
+
+            buffer.AppendLine($"public sealed record {type.Type.Dehumanize()}(");
+
+            var actionBuffer = new StringBuilder();
+            var actionCount = 0;
+
+            foreach (var relation in type.Relations ?? [])
+            {
+                if (relation.Value.This != null)
+                {
+                    // This is a direct assignment relation
+                    buffer.AppendLine($"    string {relation.Key.Dehumanize()},");
+                }
+                else
+                {
+                    actionCount++;
+
+                    if (actionBuffer.Length == 0)
+                    {
+                        actionBuffer.Append("    (");
+                    }
+
+                    actionBuffer.Append($"string {relation.Key.Dehumanize()}, ");
+                }
+            }
+
+            // Remove the last comma
+            if (type.Relations?.Count > 0)
+            {
+                buffer.Remove(buffer.Length - 1, 1);
+            }
+
+            if (actionBuffer.Length > 0)
+            {
+                if (actionCount > 1)
+                {
+                    // We can build a tuple here for multiple `Perform`
+                    actionBuffer.Remove(actionBuffer.Length - 2, 2);
+                    actionBuffer.Append(") Perform");
+                }
+                else
+                {
+                    // If there's only one action, remove the opening parenthesis and space
+                    actionBuffer.Remove(0, 5);
+                    actionBuffer.Insert(0, "    ");
+                    actionBuffer.Remove(actionBuffer.Length - 2, 2);
+                }
+
+                buffer.AppendLine();
+                buffer.Append(actionBuffer.ToString());
+            }
+            else
+            {
+                buffer.Remove(buffer.Length - 1, 1);
+            }
+
+            var objectType = type.Type switch
+            {
+                // Use convention to determine type of object
+                var t when t.EndsWith("users") => "IResource, IAccessor",
+                var t when t.EndsWith("org") => "IResource, IAccessor",
+                var t when t.EndsWith("group") => "IResource, IAccessor",
+                var t when t.EndsWith("team") => "IResource, IAccessor",
+                _ => "IResource",
+            };
+
+            buffer.AppendLine(
+                $"""
+
+                ) : {objectType};
+
+                """
+            );
+        }
+
+        buffer.AppendLine("#pragma warning restore SA1600 // Auto-generated code");
+
+        var code = buffer.ToString();
+
+        // Visual confirmation
+        Console.WriteLine(code);
+
+        // Write to the tests/Models/PermissionScopes.g.cs file
+        File.WriteAllText(Path.Combine("tests", "Models", "PermissionScopes.g.cs"), code);
+    }
+);
+
+Target("default", dependsOn: ["transform-fga", "create-model"]);
 
 await RunTargetsAndExitAsync(args);

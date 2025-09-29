@@ -1,0 +1,31 @@
+// This file is auto-generated from fga-model.fga
+#pragma warning disable SA1600 // Auto-generated code
+public sealed record User : IAccessor;
+
+public sealed record Group(
+    string Member,
+    string Org
+) : IResource, IAccessor;
+
+public sealed record Org(
+    string Group,
+    string Member
+) : IResource, IAccessor;
+
+public sealed record Form(
+    string Approver,
+    string Editor,
+    string Publisher,
+    string Reader,
+    (string Approve, string Edit, string Publish, string Read) Perform
+) : IResource;
+
+public sealed record Document(
+    string Approver,
+    string Editor,
+    string Publisher,
+    string Reader,
+    (string Approve, string Edit, string Publish, string Read) Perform
+) : IResource;
+
+#pragma warning restore SA1600 // Auto-generated code

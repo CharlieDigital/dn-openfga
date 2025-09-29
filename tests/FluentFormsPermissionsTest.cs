@@ -199,9 +199,9 @@ public class FluentFormsPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Assign<Org, Group>("motion_299", o => o.Group, "managers_team_299")
+            .Add<Org, Group>("motion_299", o => o.Group, "managers_team_299")
             .Add<Group, User>("managers_team_299", g => g.Member, "casey_299")
-            .Assign<Form, Org>("299", f => f.Editor, "motion_299")
+            .Add<Form, Org>("299", f => f.Editor, "motion_299")
             .SaveChangesAsync(CancellationToken.None);
 
         var caseyCanAccessForm299 = await Permissions
