@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using Humanizer;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
 using static Permissions;
@@ -36,4 +38,78 @@ public class PermissionsIntrospector(OpenFgaClient client)
 
         return response.Objects;
     }
+
+    /// <summary>
+    /// Lists all of the objects that a user has any relation to.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="relationExpression">The name of the relation.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <typeparam name="TUser">The type of user entity.</typeparam>
+    public async Task<IEnumerable<string>> ListObjectsForUserAsync<TRes, TUser>(
+        string userId,
+        Expression<Func<TRes, object>> relationExpression,
+        CancellationToken cancellationToken
+    )
+        where TRes : IResource
+        where TUser : IAccessor =>
+        await ListObjectsForUserAsync<TRes, TUser>(
+            userId,
+            relationExpression.ResolveName(),
+            cancellationToken
+        );
+
+    /// <summary>
+    /// Gets a list of user IDs for the given object and relation.
+    /// </summary>
+    /// <param name="objectId">The ID of the object.</param>
+    /// <param name="relationName">The relation name to list users for.</param>
+    /// <param name="cancellationToken"></param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the user.</typeparam>
+    /// <returns>The list of user IDs for the given object and relation.</returns>
+    public async Task<IEnumerable<string>> ListUsersForObjectAsync<TRes, TUser>(
+        string objectId,
+        string relationName,
+        CancellationToken cancellationToken
+    )
+        where TRes : IResource
+        where TUser : IAccessor
+    {
+        var objectType = typeof(TRes).Name.Underscore();
+        var userType = typeof(TUser).Name.Underscore();
+
+        var request = new ClientListUsersRequest
+        {
+            Object = new() { Type = objectType, Id = objectId },
+            Relation = relationName,
+            UserFilters = [new() { Type = userType }],
+        };
+
+        var response = await client.ListUsers(request, cancellationToken: cancellationToken);
+
+        return response.Users.Select(u => u.Object?.Id).Where(id => id is not null)!;
+    }
+
+    /// <summary>
+    /// Gets a list of user IDs for the given object and relation.
+    /// </summary>
+    /// <param name="objectId">The ID of the object.</param>
+    /// <param name="relationName">The relation name to list users for.</param>
+    /// <param name="cancellationToken"></param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the user.</typeparam>
+    /// <returns>The list of user IDs for the given object and relation.</returns>
+    public async Task<IEnumerable<string>> ListUsersForObjectAsync<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression,
+        CancellationToken cancellationToken
+    )
+        where TRes : IResource
+        where TUser : IAccessor =>
+        await ListUsersForObjectAsync<TRes, TUser>(
+            objectId,
+            relationExpression.ResolveName(),
+            cancellationToken
+        );
 }

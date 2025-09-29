@@ -212,4 +212,26 @@ public class FluentFormsPermissionsTest
 
         Assert.True(caseyCanAccessForm299);
     }
+
+    [Fact]
+    public async Task Can_Create_Group_And_List_Members()
+    {
+        var client = _fixture.GetClient(STORE_ID);
+
+        await Groups
+            .WithClient(client)
+            .AddMembersAsync(
+                "engineering_team_300",
+                ["alice_300", "bob_300", "carol_300"],
+                TestContext.Current.CancellationToken
+            );
+
+        var members = await Groups
+            .WithClient(client)
+            .ListMembersAsync("engineering_team_300", TestContext.Current.CancellationToken);
+
+        Assert.Contains("alice_300", members);
+        Assert.Contains("bob_300", members);
+        Assert.Contains("carol_300", members);
+    }
 }

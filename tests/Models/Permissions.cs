@@ -4,7 +4,7 @@ using OpenFga.Sdk.Client;
 /// <summary>
 /// Static entry point to make it easier to start building permissions.
 /// </summary>
-public class Permissions
+public static class Permissions
 {
     // <summary>
     /// Provides the client that will be used.  Returns a tuple of functions to create

@@ -123,6 +123,24 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     }
 
     /// <summary>
+    /// Convenience method to add the same relation for multiple users.
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.k</param>
+    /// <param name="relationExpression">The relation that is linking the user to the object.</param>
+    /// <param name="userId">The IDs of multiple accessors (can be a group, for example).  MUST BE OF THE SAME TYPE</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    /// <returns>The permission builder to continue to chain.</returns>
+    public PermissionBuilder AddMany<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression,
+        params string[] userIds
+    )
+        where TRes : IResource
+        where TUser : IAccessor =>
+        AddMany<TRes, TUser>(objectId, relationExpression.ResolveName(), userIds);
+
+    /// <summary>
     /// Revokes a permission for a single user.  Revoke will fail if the relation
     /// does not exist.
     /// </summary>
