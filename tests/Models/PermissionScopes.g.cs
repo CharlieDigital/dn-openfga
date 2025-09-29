@@ -4,10 +4,10 @@ public sealed record User : IAccessor;
 
 public sealed record Group(
     string Member,
-    string Org
+    string Team
 ) : IResource, IAccessor;
 
-public sealed record Org(
+public sealed record Team(
     string Group,
     string Member
 ) : IResource, IAccessor;
