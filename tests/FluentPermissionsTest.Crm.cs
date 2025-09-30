@@ -27,6 +27,9 @@ public partial class FluentPermissionsTest
             // via the group `us_east_sales_399` and the team `motion_399`
             // which has been granted editor access on the company.
             .Can<CrmCompany, User>("acme_corp_399", f => f.Perform.Edit, "casey_399")
+            // Because the `CrmPerson` `potential_customer` has the parent `CrmCompany` `acme_corp_399`
+            // and `casey_399` can edit the company, they should also be able to edit the person.
+            .Can<CrmPerson, User>("potential_customer", f => f.Perform.Edit, "casey_399")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(caseyCanAccessCrmCompany399);
