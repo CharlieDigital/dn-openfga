@@ -135,4 +135,26 @@ public class PermissionsIntrospector(OpenFgaClient client)
             relationExpression.ResolveName(),
             cancellationToken
         );
+
+    /// <summary>
+    /// For a given object ID, get all of the users that have any relation to it.
+    /// </summary>
+    /// <param name="objectId">The ID of the object.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <returns>A list of all user entities with a relation to the object.</returns>
+    public async Task<IEnumerable<string>> ListUsersForObjectAsync<TRes>(
+        string objectId,
+        CancellationToken cancellationToken = default
+    )
+        where TRes : IResource
+    {
+        var objectSpecifier = MakeEntityName<TRes>(objectId);
+
+        var request = new ClientReadRequest { Object = objectSpecifier };
+
+        var response = await client.Read(request, cancellationToken: cancellationToken);
+
+        return response.Tuples.Select(u => u.Key?.User).Where(id => id is not null)!;
+    }
 }

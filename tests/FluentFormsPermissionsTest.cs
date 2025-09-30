@@ -279,4 +279,35 @@ public class FluentFormsPermissionsTest
         Assert.Contains("form:form_302", forms);
         Assert.DoesNotContain("form:form_303", forms);
     }
+
+    [Fact]
+    public async Task Can_List_All_Users_For_A_Given_Resource()
+    {
+        var client = _fixture.GetClient(STORE_ID);
+
+        await Resources
+            .WithClient(client)
+            .AddUsersAsync<Form, User>(
+                "form_303",
+                r => r.Editor,
+                ["alice_303"],
+                TestContext.Current.CancellationToken
+            );
+
+        await Resources
+            .WithClient(client)
+            .AddUsersAsync<Form, User>(
+                "form_303",
+                r => r.Editor,
+                ["bob_303"],
+                TestContext.Current.CancellationToken
+            );
+
+        var users = await Resources
+            .WithClient(client)
+            .ListUsersAsync<Form>("form_303", TestContext.Current.CancellationToken);
+
+        Assert.Contains("user:alice_303", users);
+        Assert.Contains("user:bob_303", users);
+    }
 }

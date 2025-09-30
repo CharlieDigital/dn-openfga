@@ -73,4 +73,23 @@ public class Resources
             userIds,
             cancellationToken
         );
+
+    /// <summary>
+    /// List all user IDs with access to this object, regardless of the relation.
+    /// </summary>
+    /// <param name="resourceId">The ID of the resource</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <typeparam name="TRes">The type of the resource being requested.</typeparam>
+    /// <returns>Returns the list of IDs that have access to this resource with any relation.</returns>
+    public async Task<IEnumerable<string>> ListUsersAsync<TRes>(
+        string resourceId,
+        CancellationToken cancellationToken = default
+    )
+        where TRes : IResource
+    {
+        return await Permissions
+            .WithClient(_client)
+            .ToIntrospect()
+            .ListUsersForObjectAsync<TRes>(resourceId, cancellationToken);
+    }
 }
