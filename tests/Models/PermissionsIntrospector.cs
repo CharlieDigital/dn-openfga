@@ -10,7 +10,7 @@ using static Permissions;
 public class PermissionsIntrospector(OpenFgaClient client)
 {
     /// <summary>
-    /// Lists all of the objects that a user has any relation to.
+    /// Lists all of the objects that a user has the specified relation to.
     /// </summary>
     /// <param name="userId">The ID of the user.</param>
     /// <param name="relationName">The name of the relation.</param>
@@ -37,6 +37,29 @@ public class PermissionsIntrospector(OpenFgaClient client)
         var response = await client.ListObjects(request, cancellationToken: cancellationToken);
 
         return response.Objects;
+    }
+
+    /// <summary>
+    /// Lists all of the objects that a user has any relation to.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <typeparam name="TUser">The type of user entity.</typeparam>
+    public async Task<IEnumerable<string>> ListObjectsForUserAsync<TRes, TUser>(
+        string userId,
+        CancellationToken cancellationToken = default
+    )
+        where TRes : IResource
+        where TUser : IAccessor
+    {
+        var user = MakeEntityName<TUser>(userId);
+        var resource = MakeEntityName<TRes>();
+
+        var request = new ClientReadRequest { User = user, Object = $"{resource}:" };
+
+        var response = await client.Read(request, cancellationToken: cancellationToken);
+
+        return response.Tuples.Select(t => t.Key.Object);
     }
 
     /// <summary>

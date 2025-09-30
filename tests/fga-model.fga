@@ -1,12 +1,13 @@
 model
   schema 1.1
 
-type user
-
 # See: https://openfga.dev/docs/configuration-language
 # Google Drive: https://openfga.dev/docs/modeling/advanced/gdrive
 # Entitlements: https://openfga.dev/docs/modeling/advanced/entitlements
 # GitHub: https://openfga.dev/docs/modeling/advanced/github
+
+type user
+
 type group
   relations
     define member: [user]         # Direct membership: users can belong to groups
@@ -56,3 +57,5 @@ type document
 
     # Published permission: Direct publishers OR members of groups/teams that are publishers
     define publish: publisher or member from publisher
+
+# Use case for CRM: https://usemotion.slack.com/archives/C061E0G4CTV/p1759015002088959

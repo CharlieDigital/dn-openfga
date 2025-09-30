@@ -238,4 +238,45 @@ public class FluentFormsPermissionsTest
         Assert.Contains("bob_300", members);
         Assert.Contains("carol_300", members);
     }
+
+    [Fact]
+    public async Task Can_List_Objects_User_Can_Access_For_Resource_Type()
+    {
+        var client = _fixture.GetClient(STORE_ID);
+
+        await Resources
+            .WithClient(client)
+            .AddUsersAsync<Form, User>(
+                "form_301",
+                r => r.Editor,
+                ["alice_301"],
+                TestContext.Current.CancellationToken
+            );
+
+        await Resources
+            .WithClient(client)
+            .AddUsersAsync<Form, User>(
+                "form_302",
+                r => r.Editor,
+                ["alice_301"],
+                TestContext.Current.CancellationToken
+            );
+
+        await Resources
+            .WithClient(client)
+            .AddUsersAsync<Form, User>(
+                "form_303",
+                r => r.Editor,
+                ["bob_301"],
+                TestContext.Current.CancellationToken
+            );
+
+        var forms = await Users
+            .WithClient(client)
+            .ListObjectsAsync<Form>("alice_301", TestContext.Current.CancellationToken);
+
+        Assert.Contains("form:form_301", forms);
+        Assert.Contains("form:form_302", forms);
+        Assert.DoesNotContain("form:form_303", forms);
+    }
 }

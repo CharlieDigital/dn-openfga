@@ -234,17 +234,17 @@ public class FormsPermissionsTest
     }
 
     [Fact]
-    public async Task Can_Check_Transitive_Permissions_Via_Group_And_Org()
+    public async Task Can_Check_Transitive_Permissions_Via_Group_And_Team()
     {
         var client = _fixture.GetClient(STORE_ID);
 
-        // Managers are part of org:motion
+        // Managers are part of team:motion
         await client.Write(
             new ClientWriteRequest(
                 [
                     new()
                     {
-                        Object = "org:motion",
+                        Object = "team:motion",
                         Relation = "group",
                         User = "group:managers_team_123",
                     },
@@ -261,7 +261,7 @@ public class FormsPermissionsTest
                     {
                         Object = "form:127",
                         Relation = "editor",
-                        User = "org:motion",
+                        User = "team:motion",
                     },
                 ]
             ),

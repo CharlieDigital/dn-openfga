@@ -1,7 +1,7 @@
 using OpenFga.Sdk.Client;
 
 /// <summary>
-/// A static wrapper around the concept of groups which simply provides mechanism
+/// A  wrapper around the concept of groups which simply provides mechanism
 /// that re-use the underlying <see cref="Permissions"/> layer to make it more
 /// convenient to work with groups.
 /// </summary>
