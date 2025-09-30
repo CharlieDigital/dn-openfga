@@ -28,4 +28,18 @@ public sealed record Document(
     (string Approve, string Edit, string Publish, string Read) Perform
 ) : IResource;
 
+public sealed record CrmCompany(
+    string Editor,
+    string Owner,
+    string Reader,
+    (string Edit, string Owns, string Read) Perform
+) : IResource;
+
+public sealed record CrmPerson(
+    string Editor,
+    string Parent,
+    string Reader,
+    (string Edit, string Owns, string Read) Perform
+) : IResource;
+
 #pragma warning restore SA1600 // Auto-generated code

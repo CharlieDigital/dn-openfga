@@ -3,7 +3,7 @@ using OpenFga.Sdk.Exceptions;
 
 namespace tests;
 
-[Collection("FormsPermissionsCollection")]
+[Collection("PermissionsCollection")]
 public class FormsPermissionsTest
 {
     private static readonly string STORE_ID = "forms-permissions-store";

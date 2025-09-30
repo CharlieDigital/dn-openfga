@@ -31,7 +31,7 @@ public class FormsPermissionsFixture : IDisposable
 
             // Use the initial client to create the store
             using var initialClient = new OpenFgaClient(
-                new ClientConfiguration { ApiUrl = "http://localhost:8090" }
+                new ClientConfiguration { ApiUrl = "http://localhost:8080" }
             );
 
             // Create the store
@@ -42,7 +42,7 @@ public class FormsPermissionsFixture : IDisposable
             _client = new OpenFgaClient(
                 new ClientConfiguration
                 {
-                    ApiUrl = "http://localhost:8090",
+                    ApiUrl = "http://localhost:8080",
                     StoreId = storeResponse.Id,
                 }
             );
@@ -84,5 +84,5 @@ public class FormsPermissionsFixture : IDisposable
     }
 }
 
-[CollectionDefinition("FormsPermissionsCollection")]
+[CollectionDefinition("PermissionsCollection")]
 public class FormsPermissionsCollection : ICollectionFixture<FormsPermissionsFixture> { }

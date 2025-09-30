@@ -1,13 +1,13 @@
 namespace tests;
 
-[Collection("FormsPermissionsCollection")]
-public class FluentFormsPermissionsTest
+[Collection("PermissionsCollection")]
+public partial class FluentPermissionsTest
 {
     private static readonly string STORE_ID = "forms-permissions-store";
 
     private readonly FormsPermissionsFixture _fixture;
 
-    public FluentFormsPermissionsTest(FormsPermissionsFixture fixture)
+    public FluentPermissionsTest(FormsPermissionsFixture fixture)
     {
         _fixture = fixture;
     }
@@ -285,27 +285,26 @@ public class FluentFormsPermissionsTest
     {
         var client = _fixture.GetClient(STORE_ID);
 
-        await Resources
-            .WithClient(client)
-            .AddUsersAsync<Form, User>(
-                "form_303",
-                r => r.Editor,
-                ["alice_303"],
-                TestContext.Current.CancellationToken
-            );
+        var resources = Resources.WithClient(client);
 
-        await Resources
-            .WithClient(client)
-            .AddUsersAsync<Form, User>(
-                "form_303",
-                r => r.Editor,
-                ["bob_303"],
-                TestContext.Current.CancellationToken
-            );
+        await resources.AddUsersAsync<Form, User>(
+            "form_303",
+            r => r.Editor,
+            ["alice_303"],
+            TestContext.Current.CancellationToken
+        );
 
-        var users = await Resources
-            .WithClient(client)
-            .ListUsersAsync<Form>("form_303", TestContext.Current.CancellationToken);
+        await resources.AddUsersAsync<Form, User>(
+            "form_303",
+            r => r.Editor,
+            ["bob_303"],
+            TestContext.Current.CancellationToken
+        );
+
+        var users = await resources.ListUsersAsync<Form>(
+            "form_303",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Contains("user:alice_303", users);
         Assert.Contains("user:bob_303", users);

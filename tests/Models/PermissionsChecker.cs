@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using OpenFga.Sdk.Client;
 using OpenFga.Sdk.Client.Model;
 using OpenFga.Sdk.Model;
+using static Permissions;
 
 /// <summary>
 /// Builder class to create a set of permissions and grant them in one call.
@@ -40,11 +41,11 @@ public class PermissionChecker(OpenFgaClient client)
         where TRes : IResource
         where TUser : IAccessor
     {
-        var resourceType = typeof(TRes).Name.ToLower();
-        var userType = typeof(TUser).Name.ToLower();
+        var resourceIdentifier = MakeEntityName<TRes>(objectId);
+        var userIdentifier = MakeEntityName<TUser>(userId);
         _lastUserId = userId;
 
-        _checks.Add(($"{resourceType}:{objectId}", relation, $"{userType}:{userId}"));
+        _checks.Add((resourceIdentifier, relation, userIdentifier));
 
         return this;
     }

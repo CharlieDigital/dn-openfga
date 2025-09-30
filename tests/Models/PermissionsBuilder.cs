@@ -227,6 +227,8 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
             _ => new ClientWriteRequest { Writes = tuples, Deletes = removedTuples },
         };
 
+        var json = request.ToJson();
+
         var response = await client.Write(
             request,
             new ClientWriteOptions

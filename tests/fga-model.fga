@@ -59,3 +59,26 @@ type document
     define publish: publisher or member from publisher
 
 # Use case for CRM: https://usemotion.slack.com/archives/C061E0G4CTV/p1759015002088959
+
+type crm_company
+  relations
+    # Define the relations and the type of accessors
+    define reader: [user, group, team]
+    define editor: [user, group, team]
+    define owner: [user, group, team]
+
+    # Define the permissions and the members associated with the permission
+    define read: reader or editor or owner or member from reader or member from editor or member from owner
+    define edit: editor or member from editor or member from owner
+    define owns: owner or member from owner
+
+type crm_person
+  relations
+    define parent: [crm_company]
+    define reader: [user, group, team]
+    define editor: [user, group, team]
+
+    # Inherit permissions from the parent company
+    define read: reader or editor or read from parent or edit from parent or owns from parent
+    define edit: editor or edit from parent or owns from parent
+    define owns: owns from parent
