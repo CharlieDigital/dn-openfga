@@ -37,11 +37,10 @@ public sealed record CrmCompany(
 ) : IResource;
 
 public sealed record CrmPerson(
-    string Blocked,
+    string Editor,
     string Parent,
-    (string Edit, string Editor, string Owner, string Read, string Reader) Perform
+    string Reader,
+    (string Edit, string Owner, string Read) Perform
 ) : IResource;
-
-public sealed record CrmEmailAccount : IAccessor;
 
 #pragma warning restore SA1600 // Auto-generated code

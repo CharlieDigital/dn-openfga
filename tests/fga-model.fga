@@ -69,8 +69,9 @@ type crm_company
     define owner: [user, group, team]
 
     # Define the permissions and the members associated with the permission
-    define read: member from owner or (reader but not blocked) or (editor but not blocked) or owner or (member from reader but not blocked) or (member from editor but not blocked)
-    define edit: member from owner or (editor but not blocked) or (member from editor but not blocked)
+    # Note: blocking applies to users who are directly blocked OR members of blocked groups
+    define read: ((member from owner) but not (blocked or (member from blocked))) or ((reader) but not (blocked)) or ((editor) but not (blocked)) or ((owner) but not (blocked)) or ((member from reader) but not (blocked or (member from blocked))) or ((member from editor) but not (blocked or (member from blocked)))
+    define edit: ((member from owner) but not (blocked or (member from blocked))) or ((editor) but not (blocked)) or ((member from editor) but not (blocked or (member from blocked)))
 
 type crm_person
   relations
@@ -80,5 +81,5 @@ type crm_person
     define owner: owner from parent # We can delegate this to the parent
 
     # Inherit permissions from the parent company
-    define read: reader or editor or read from parent or edit from parent or owner from parent
-    define edit: editor or edit from parent or owner from parent
+    define read: read from parent or owner
+    define edit: edit from parent or owner

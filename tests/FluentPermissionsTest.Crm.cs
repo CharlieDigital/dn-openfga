@@ -60,7 +60,7 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToValidate()
             // Check if `bob` can access the company `acme_corp`
-            .Can<User, CrmCompany>("bob_400", f => f.Perform.Edit, "acme_corp_400")
+            .Can<User, CrmCompany>("bob_400", f => f.Editor, "acme_corp_400")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.False(bobCanAccessCrmCompany);
@@ -82,8 +82,9 @@ public partial class FluentPermissionsTest
     {
         var client = _fixture.GetClient(STORE_ID);
 
-        await Permissions
-            .WithClient(client)
+        var permissions = Permissions.WithClient(client);
+
+        await permissions
             .ToMutate()
             // Add the group `us_east_team_401` and add `alice_401` as a member
             .Add<User, Group>("alice_401", g => g.Member, "us_east_team_401")
@@ -92,30 +93,39 @@ public partial class FluentPermissionsTest
             .Add<Group, CrmCompany>("us_east_team_401", c => c.Reader, "acme_corp_401")
             // Add `alice_401` directly as an owner on the company `acme_corp_401`
             .Add<User, CrmCompany>("alice_401", c => c.Owner, "acme_corp_401")
-            // Now block `us_east_team_401` from accessing the company directly
-            .Add<Group, CrmCompany>("us_east_team_401", c => c.Blocked, "acme_corp_401")
             // The `CrmPerson` `potential_customer_401` has the parent `CrmCompany` `acme_corp_401`
             // So it should inherit the block from parent company.
             .Assign<CrmCompany, CrmPerson>("acme_corp_401", c => c.Parent, "potential_customer_401")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        // Bob is only a member of the team and should not be able to access
-        // the person because the team is blocked.
-        var bobCanAccessCrmPerson = await Permissions
-            .WithClient(client)
+        // Bob is only a member of the group and should be able to access via the group
+        var bobCanAccessCrmPerson = await permissions
             .ToValidate()
             // Check if `bob` can access the person `potential_customer_401`
-            .Can<User, CrmPerson>("bob_401", p => p.Perform.Edit, "potential_customer_401")
+            .Can<User, CrmPerson>("bob_401", p => p.Perform.Read, "potential_customer_401")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
-        Assert.False(bobCanAccessCrmPerson);
+        Assert.True(bobCanAccessCrmPerson);
 
-        // Alice is the owner and should be able to access the company even though
-        // the team is blocked.
-        var aliceCanAccessCrmCompany = await Permissions
-            .WithClient(client)
+        // Now block the group and Bob should be blocked
+        await permissions
+            .ToMutate()
+            // Now block `us_east_team_401` from accessing the company directly
+            .Add<Group, CrmCompany>("us_east_team_401", c => c.Blocked, "acme_corp_401")
+            .SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var bobCanStillAccessCrmPerson = await permissions
             .ToValidate()
-            // Check if `alice` can access the company `acme_corp`
+            .Can<User, CrmPerson>("bob_401", p => p.Perform.Read, "potential_customer_401")
+            .ValidateSingleAsync(TestContext.Current.CancellationToken);
+
+        Assert.False(bobCanStillAccessCrmPerson);
+
+        // Alice is the owner and should be able to access the customer record even though
+        // the team is blocked.
+        var aliceCanAccessCrmCompany = await permissions
+            .ToValidate()
+            // Check if `alice` can access the customer record `potential_customer_401`
             .Has<User, CrmPerson>("alice_401", p => p.Perform.Owner, "potential_customer_401")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 

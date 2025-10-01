@@ -241,6 +241,10 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
             cancellationToken: cancellation
         );
 
+        _newGrants.Clear();
+        _removedGrants.Clear();
+        _lastUserId = null;
+
         return (
             response.Writes?.Select(t => t.TupleKey).ToArray() ?? [],
             response.Deletes?.Select(t => t.TupleKey).ToArray() ?? []

@@ -172,6 +172,9 @@ public class PermissionChecker(OpenFgaClient client)
             cancellationToken: cancellationToken
         );
 
+        _checks.Clear();
+        _lastUserId = null;
+
         return response.Allowed ?? false;
     }
 
@@ -198,6 +201,9 @@ public class PermissionChecker(OpenFgaClient client)
             .ToList();
 
         var response = await client.BatchCheck(request, cancellationToken: cancellationToken);
+
+        _checks.Clear();
+        _lastUserId = null;
 
         return
         [
