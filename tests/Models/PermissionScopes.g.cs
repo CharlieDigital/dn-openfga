@@ -29,17 +29,19 @@ public sealed record Document(
 ) : IResource;
 
 public sealed record CrmCompany(
+    string Blocked,
     string Editor,
     string Owner,
     string Reader,
-    (string Edit, string Owns, string Read) Perform
+    (string Edit, string Read) Perform
 ) : IResource;
 
 public sealed record CrmPerson(
-    string Editor,
+    string Blocked,
     string Parent,
-    string Reader,
-    (string Edit, string Owns, string Read) Perform
+    (string Edit, string Editor, string Owner, string Read, string Reader) Perform
 ) : IResource;
+
+public sealed record CrmEmailAccount : IAccessor;
 
 #pragma warning restore SA1600 // Auto-generated code

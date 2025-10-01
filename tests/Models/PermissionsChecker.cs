@@ -104,6 +104,22 @@ public class PermissionChecker(OpenFgaClient client)
         where TUser : IAccessor => Can<TRes, TUser>(objectId, relation, userId);
 
     /// <summary>
+    /// Performs a single permission check (alias for Can)
+    /// </summary>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relationExpression">The relation that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    public PermissionChecker Has<TRes, TUser>(
+        string objectId,
+        Expression<Func<TRes, object>> relationExpression,
+        string userId
+    )
+        where TRes : IResource
+        where TUser : IAccessor => Can<TRes, TUser>(objectId, relationExpression, userId);
+
+    /// <summary>
     /// Performs a single permission check (alias for Can) using the last user checked.
     /// </summary>
     /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>

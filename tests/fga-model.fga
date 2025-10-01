@@ -62,23 +62,23 @@ type document
 
 type crm_company
   relations
+    define blocked: [user, group, team]
     # Define the relations and the type of accessors
     define reader: [user, group, team]
     define editor: [user, group, team]
     define owner: [user, group, team]
 
     # Define the permissions and the members associated with the permission
-    define read: reader or editor or owner or member from reader or member from editor or member from owner
-    define edit: editor or member from editor or member from owner
-    define owns: owner or member from owner
+    define read: member from owner or (reader but not blocked) or (editor but not blocked) or owner or (member from reader but not blocked) or (member from editor but not blocked)
+    define edit: member from owner or (editor but not blocked) or (member from editor but not blocked)
 
 type crm_person
   relations
     define parent: [crm_company]
     define reader: [user, group, team]
     define editor: [user, group, team]
+    define owner: owner from parent # We can delegate this to the parent
 
     # Inherit permissions from the parent company
-    define read: reader or editor or read from parent or edit from parent or owns from parent
-    define edit: editor or edit from parent or owns from parent
-    define owns: owns from parent
+    define read: reader or editor or read from parent or edit from parent or owner from parent
+    define edit: editor or edit from parent or owner from parent
