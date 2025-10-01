@@ -20,9 +20,9 @@ public partial class FluentPermissionsTest
         var (added, revoked) = await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("223", "editor", "alice")
-            .Add<Form, User>("223", "editor", "bob")
-            .AddMany<Form, User>("223", "reader", ["carol", "dave", "eve"])
+            .Add<User, Form>("alice", "editor", "223")
+            .Add<User, Form>("bob", "editor", "223")
+            .AddMany<User, Form>("reader", "223", "carol", "dave", "eve")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(5, added.Length);
@@ -37,13 +37,13 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("224", "editor", "alice")
+            .Add<User, Form>("alice", "editor", "224")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var canAliceEdit = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("224", "edit", "alice")
+            .Can<User, Form>("alice", "edit", "224")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.True(canAliceEdit);
@@ -57,19 +57,19 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("225", "editor", "alice")
+            .Add<User, Form>("alice", "editor", "225")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Revoke<Form, User>("225", "editor", "alice")
+            .Revoke<User, Form>("alice", "editor", "225")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var canAliceEdit = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("225", "edit", "alice")
+            .Can<User, Form>("alice", "edit", "225")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.False(canAliceEdit);
@@ -83,15 +83,15 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("226", "editor", "alice")
-            .Add<Team, User>("motion", "member", "alice")
+            .Add<User, Form>("alice", "editor", "226")
+            .Add<User, Team>("alice", "member", "motion")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var allAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("226", "edit", "alice")
-            .Has<Team, User>("motion", "member", "alice")
+            .Can<User, Form>("alice", "edit", "226")
+            .Has<User, Team>("alice", "member", "motion")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(allAllowed);
@@ -105,15 +105,15 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("235", "editor", "alice")
-            .Add<Team, User>("acme_235", "member", "alice") // 👈 Alice is now in Acme.
+            .Add<User, Form>("alice", "editor", "235")
+            .Add<User, Team>("alice", "member", "acme_235") // 👈 Alice is now in Acme.
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var allAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("235", "edit", "alice")
-            .Has<Team, User>("motion_235", "member", "alice") // 👈 Alice is NOT in Motion.
+            .Can<User, Form>("alice", "edit", "235")
+            .Has<User, Team>("alice", "member", "motion_235") // 👈 Alice is NOT in Motion.
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.False(allAllowed);
@@ -127,15 +127,15 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("239", "editor", "alice")
-            .Add<Team, User>("acme_239", "member", "alice") // 👈 Alice is now in Acme.
+            .Add<User, Form>("alice", "editor", "239")
+            .Add<User, Team>("alice", "member", "acme_239") // 👈 Alice is now in Acme.
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var someAllowed = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("239", "edit", "alice")
-            .HasAlso<Team, User>("motion_239", "member") // 👈 Alice is NOT in Motion.
+            .Can<User, Form>("alice", "edit", "239")
+            .HasAlso<User, Team>("alice", "member") // 👈 Alice is NOT in Motion.
             .ValidateAnyAsync(TestContext.Current.CancellationToken);
 
         Assert.True(someAllowed);
@@ -149,8 +149,8 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("240", "editor", "alice")
-            .Add<Team, User>("acme_240", "member", "alice") // 👈 Alice is now in Acme.
+            .Add<User, Form>("alice", "editor", "240")
+            .Add<User, Team>("alice", "member", "acme_240") // 👈 Alice is now in Acme.
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var objects = await Permissions
@@ -174,16 +174,16 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Form, User>("241", r => r.Editor, "alice")
-            .AddAlso<Form, User>("242", r => r.Editor)
-            .AddAlso<Team, User>("acme_241", r => r.Member)
+            .Add<User, Form>("alice", r => r.Editor, "241")
+            .AddAlso<User, Form>("alice", r => r.Editor, "242")
+            .AddAlso<User, Team>("alice", r => r.Member, "acme_241")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var accessToAll = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("241", r => r.Perform.Edit, "alice")
-            .CanAlso<Form, User>("242", r => r.Perform.Edit)
+            .Can<User, Form>("alice", r => r.Perform.Edit, "241")
+            .CanAlso<User, Form>("alice", r => r.Perform.Edit, "242")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         // Only a single object
@@ -203,15 +203,15 @@ public partial class FluentPermissionsTest
         await Permissions
             .WithClient(client)
             .ToMutate()
-            .Add<Team, Group>("motion_299", o => o.Group, "managers_team_299")
-            .Add<Group, User>("managers_team_299", g => g.Member, "casey_299")
-            .Add<Form, Team>("299", f => f.Editor, "motion_299")
+            .Add<Group, Team>("managers_team_299", o => o.Group, "motion_299")
+            .Add<User, Group>("casey_299", g => g.Member, "managers_team_299")
+            .Add<Team, Form>("motion_299", f => f.Editor, "299")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var caseyCanAccessForm299 = await Permissions
             .WithClient(client)
             .ToValidate()
-            .Can<Form, User>("299", f => f.Perform.Edit, "casey_299")
+            .Can<User, Form>("casey_299", f => f.Perform.Edit, "299")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(caseyCanAccessForm299);

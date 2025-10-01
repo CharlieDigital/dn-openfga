@@ -45,7 +45,7 @@ public class Resources
         await Permissions
             .WithClient(_client)
             .ToMutate()
-            .AddMany<TRes, TAccessor>(resourceId, relation, [.. userIds])
+            .AddMany<TAccessor, TRes>(relation, resourceId, [.. userIds])
             .SaveChangesAsync(cancellationToken);
     }
 

@@ -39,7 +39,7 @@ public class Groups
         await Permissions
             .WithClient(_client)
             .ToMutate()
-            .AddMany<Group, User>(groupId, g => g.Member, [.. userIds])
+            .AddMany<User, Group>("member", groupId, [.. userIds])
             .SaveChangesAsync(cancellationToken);
     }
 

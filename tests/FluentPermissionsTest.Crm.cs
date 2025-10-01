@@ -11,13 +11,13 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToMutate()
             // Add the group `us_east_sales_399` to the team `motion_399`
-            .Add<Team, Group>("motion_399", o => o.Group, "us_east_sales_399")
+            .Add<Group, Team>("us_east_sales_399", o => o.Group, "motion_399")
             // Add the user `casey_399` to the group `us_east_sales_399`
-            .Add<Group, User>("us_east_sales_399", g => g.Member, "casey_399")
+            .Add<User, Group>("casey_399", g => g.Member, "us_east_sales_399")
             // Add the team `motion_399` as an editor on the company `acme_corp_399`
-            .Add<CrmCompany, Team>("acme_corp_399", c => c.Editor, "motion_399")
+            .Add<Team, CrmCompany>("motion_399", c => c.Editor, "acme_corp_399")
             // The `CrmPerson` `potential_customer` has the parent `CrmCompany` `acme_corp_399`
-            .Assign<CrmPerson, CrmCompany>("potential_customer", c => c.Parent, "acme_corp_399")
+            .Assign<CrmCompany, CrmPerson>("acme_corp_399", c => c.Parent, "potential_customer")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var caseyCanAccessCrmCompany399 = await Permissions
@@ -26,10 +26,10 @@ public partial class FluentPermissionsTest
             // Now we check if `casey_399` can edit the `CrmCompany` `acme_corp_399`
             // via the group `us_east_sales_399` and the team `motion_399`
             // which has been granted editor access on the company.
-            .Can<CrmCompany, User>("acme_corp_399", f => f.Perform.Edit, "casey_399")
+            .Can<User, CrmCompany>("casey_399", f => f.Perform.Edit, "acme_corp_399")
             // Because the `CrmPerson` `potential_customer` has the parent `CrmCompany` `acme_corp_399`
             // and `casey_399` can edit the company, they should also be able to edit the person.
-            .Can<CrmPerson, User>("potential_customer", f => f.Perform.Edit, "casey_399")
+            .Can<User, CrmPerson>("casey_399", f => f.Perform.Edit, "potential_customer")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         Assert.True(caseyCanAccessCrmCompany399);
@@ -44,14 +44,14 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToMutate()
             // Add the group `us_east_team_400` and add `alice_400` as a member
-            .Add<Group, User>("us_east_team_400", g => g.Member, "alice_400")
-            .Add<Group, User>("us_east_team_400", g => g.Member, "bob_400")
+            .Add<User, Group>("alice_400", g => g.Member, "us_east_team_400")
+            .Add<User, Group>("bob_400", g => g.Member, "us_east_team_400")
             // Add the group `us_east_team_400` as an reader on the company `acme_corp_400`
-            .Add<CrmCompany, Group>("acme_corp_400", c => c.Reader, "us_east_team_400")
+            .Add<Group, CrmCompany>("us_east_team_400", c => c.Reader, "acme_corp_400")
             // Add `alice_400` directly as an owner on the company `acme_corp_400`
-            .Add<CrmCompany, User>("acme_corp_400", c => c.Owner, "alice_400")
+            .Add<User, CrmCompany>("alice_400", c => c.Owner, "acme_corp_400")
             // Now block `us_east_team_400` from accessing the company directly
-            .Add<CrmCompany, Group>("acme_corp_400", c => c.Blocked, "us_east_team_400")
+            .Add<Group, CrmCompany>("us_east_team_400", c => c.Blocked, "acme_corp_400")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Bob is only a member of the team and should not be able to access
@@ -60,7 +60,7 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToValidate()
             // Check if `bob` can access the company `acme_corp`
-            .Can<CrmCompany, User>("acme_corp_400", f => f.Perform.Edit, "bob_400")
+            .Can<User, CrmCompany>("bob_400", f => f.Perform.Edit, "acme_corp_400")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.False(bobCanAccessCrmCompany);
@@ -71,7 +71,7 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToValidate()
             // Check if `alice` can access the company `acme_corp`
-            .Has<CrmCompany, User>("acme_corp_400", f => f.Owner, "alice_400")
+            .Has<User, CrmCompany>("alice_400", c => c.Owner, "acme_corp_400")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.True(aliceCanAccessCrmCompany);
@@ -86,17 +86,17 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToMutate()
             // Add the group `us_east_team_401` and add `alice_401` as a member
-            .Add<Group, User>("us_east_team_401", g => g.Member, "alice_401")
-            .Add<Group, User>("us_east_team_401", g => g.Member, "bob_401")
+            .Add<User, Group>("alice_401", g => g.Member, "us_east_team_401")
+            .Add<User, Group>("bob_401", g => g.Member, "us_east_team_401")
             // Add the group `us_east_team_401` as an reader on the company `acme_corp_401`
-            .Add<CrmCompany, Group>("acme_corp_401", c => c.Reader, "us_east_team_401")
+            .Add<Group, CrmCompany>("us_east_team_401", c => c.Reader, "acme_corp_401")
             // Add `alice_401` directly as an owner on the company `acme_corp_401`
-            .Add<CrmCompany, User>("acme_corp_401", c => c.Owner, "alice_401")
+            .Add<User, CrmCompany>("alice_401", c => c.Owner, "acme_corp_401")
             // Now block `us_east_team_401` from accessing the company directly
-            .Add<CrmCompany, Group>("acme_corp_401", c => c.Blocked, "us_east_team_401")
+            .Add<Group, CrmCompany>("us_east_team_401", c => c.Blocked, "acme_corp_401")
             // The `CrmPerson` `potential_customer_401` has the parent `CrmCompany` `acme_corp_401`
             // So it should inherit the block from parent company.
-            .Assign<CrmPerson, CrmCompany>("potential_customer_401", c => c.Parent, "acme_corp_401")
+            .Assign<CrmCompany, CrmPerson>("acme_corp_401", c => c.Parent, "potential_customer_401")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Bob is only a member of the team and should not be able to access
@@ -105,7 +105,7 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToValidate()
             // Check if `bob` can access the person `potential_customer_401`
-            .Can<CrmPerson, User>("potential_customer_401", f => f.Perform.Edit, "bob_401")
+            .Can<User, CrmPerson>("bob_401", p => p.Perform.Edit, "potential_customer_401")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.False(bobCanAccessCrmPerson);
@@ -116,7 +116,7 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToValidate()
             // Check if `alice` can access the company `acme_corp`
-            .Has<CrmPerson, User>("potential_customer_401", f => f.Perform.Owner, "alice_401")
+            .Has<User, CrmPerson>("alice_401", p => p.Perform.Owner, "potential_customer_401")
             .ValidateSingleAsync(TestContext.Current.CancellationToken);
 
         Assert.True(aliceCanAccessCrmCompany);
