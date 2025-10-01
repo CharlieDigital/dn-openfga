@@ -10,9 +10,46 @@ using static Permissions;
 /// </summary>
 public partial class PermissionBuilder(OpenFgaClient client, bool disableTransactions = false)
 {
-    private readonly List<(string ObjectId, string Relation, string UserId)> _newGrants = [];
+    private readonly List<(
+        string ObjectId,
+        string Relation,
+        string UserId,
+        Func<Conditions, RelationshipCondition>? conditionSelector
+    )> _newGrants = [];
     private readonly List<(string ObjectId, string Relation, string UserId)> _removedGrants = [];
     private string? _lastUserId;
+
+    /// <summary>
+    /// Add a single relation.
+    /// </summary>
+    /// <remarks>
+    /// This is the main underlying method.
+    /// </remarks>
+    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
+    /// <param name="relation">The relation that is linking the user to the object.</param>
+    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <param name="conditionSelector">Optional function to select the condition for the relationship.</param>
+    /// <typeparam name="TRes">The type of the resource.</typeparam>
+    /// <typeparam name="TUser">The type of the accessor.</typeparam>
+    /// <returns>The permission builder to continue to chain.</returns>
+    public PermissionBuilder Add<TUser, TRes>(
+        string userId,
+        string relation,
+        string objectId,
+        Func<Conditions, RelationshipCondition>? conditionSelector = null
+    )
+        where TUser : IAccessor
+        where TRes : IResource
+    {
+        var user = MakeEntityName<TUser>(userId);
+        var resource = MakeEntityName<TRes>(objectId);
+
+        _lastUserId = userId;
+
+        _newGrants.Add(($"{resource}", relation, $"{user}", conditionSelector));
+
+        return this;
+    }
 
     /// <summary>
     /// Takes an expression for the resource type to get the property name.
@@ -21,48 +58,34 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
     /// <param name="relationExpression">The relation that is linking the user to the object.</param>
     /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
+    /// <param name="conditionSelector">Optional function to select the condition for the relationship.</param>
     /// <typeparam name="TRes">The type of the resource.</typeparam>
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
     public PermissionBuilder Add<TUser, TRes>(
         string userId,
         Expression<Func<TRes, object>> relationExpression,
-        string objectId
+        string objectId,
+        Func<Conditions, RelationshipCondition>? conditionSelector = null
     )
         where TUser : IAccessor
         where TRes : IResource =>
-        Add<TUser, TRes>(userId, relationExpression.ResolveName(), objectId);
-
-    /// <summary>
-    /// Add a single relation.
-    /// </summary>
-    /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
-    /// <param name="relation">The relation that is linking the user to the object.</param>
-    /// <param name="userId">The ID of the user or accessor (can be a group, for example)</param>
-    /// <typeparam name="TRes">The type of the resource.</typeparam>
-    /// <typeparam name="TUser">The type of the accessor.</typeparam>
-    /// <returns>The permission builder to continue to chain.</returns>
-    public PermissionBuilder Add<TUser, TRes>(string userId, string relation, string objectId)
-        where TUser : IAccessor
-        where TRes : IResource
-    {
-        var user = MakeEntityName<TUser>(userId);
-        var resource = MakeEntityName<TRes>(objectId);
-        _lastUserId = userId;
-
-        _newGrants.Add(($"{resource}", relation, $"{user}"));
-        return this;
-    }
+        Add<TUser, TRes>(userId, relationExpression.ResolveName(), objectId, conditionSelector);
 
     /// <summary>
     /// Add a single relation for the last user added.
     /// </summary>
     /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
     /// <param name="relation">The relation that is linking the user to the object.</param>
+    /// <param name="conditionSelector">Optional function to select the condition for the relationship.</param>
     /// <typeparam name="TRes">The type of the resource.</typeparam>
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
-    public PermissionBuilder AddAlso<TUser, TRes>(string userId, string relation)
+    public PermissionBuilder AddAlso<TUser, TRes>(
+        string relation,
+        string objectId,
+        Func<Conditions, RelationshipCondition>? conditionSelector = null
+    )
         where TUser : IAccessor
         where TRes : IResource
     {
@@ -71,7 +94,7 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
             throw new InvalidOperationException("No previous user to add relation for.");
         }
 
-        return Add<TUser, TRes>(userId, relation, _lastUserId);
+        return Add<TUser, TRes>(_lastUserId, relation, objectId, conditionSelector);
     }
 
     /// <summary>
@@ -79,13 +102,14 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
     /// </summary>
     /// <param name="objectId">The ID of the object that the permissions are being granted to.</param>
     /// <param name="relationExpression">The relation that is linking the user to the object.</param>
+    /// <param name="conditionSelector">Optional function to select the condition for the relationship.</param>
     /// <typeparam name="TRes">The type of the resource.</typeparam>
     /// <typeparam name="TUser">The type of the accessor.</typeparam>
     /// <returns>The permission builder to continue to chain.</returns>
     public PermissionBuilder AddAlso<TUser, TRes>(
-        string userId,
         Expression<Func<TRes, object>> relationExpression,
-        string objectId
+        string objectId,
+        Func<Conditions, RelationshipCondition>? conditionSelector = null
     )
         where TUser : IAccessor
         where TRes : IResource
@@ -95,7 +119,12 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
             throw new InvalidOperationException("No previous user to add relation for.");
         }
 
-        return Add<TUser, TRes>(userId, relationExpression.ResolveName(), _lastUserId);
+        return Add<TUser, TRes>(
+            _lastUserId,
+            relationExpression.ResolveName(),
+            objectId,
+            conditionSelector
+        );
     }
 
     /// <summary>
@@ -202,12 +231,15 @@ public partial class PermissionBuilder(OpenFgaClient client, bool disableTransac
             throw new SecurityException("OpenFgaClient instance is required to grant permissions.");
         }
 
+        var conditions = new Conditions();
+
         var tuples = _newGrants
             .Select(p => new ClientTupleKey
             {
                 Object = p.ObjectId,
                 Relation = p.Relation,
                 User = p.UserId,
+                Condition = p.conditionSelector?.Invoke(conditions),
             })
             .ToList();
 

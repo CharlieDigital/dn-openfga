@@ -175,15 +175,15 @@ public partial class FluentPermissionsTest
             .WithClient(client)
             .ToMutate()
             .Add<User, Form>("alice", r => r.Editor, "241")
-            .AddAlso<User, Form>("alice", r => r.Editor, "242")
-            .AddAlso<User, Team>("alice", r => r.Member, "acme_241")
+            .AddAlso<User, Form>(r => r.Editor, "242")
+            .AddAlso<User, Team>(r => r.Member, "acme_241")
             .SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var accessToAll = await Permissions
             .WithClient(client)
             .ToValidate()
             .Can<User, Form>("alice", r => r.Perform.Edit, "241")
-            .CanAlso<User, Form>("alice", r => r.Perform.Edit, "242")
+            .CanAlso<User, Form>(r => r.Perform.Edit, "242")
             .ValidateAllAsync(TestContext.Current.CancellationToken);
 
         // Only a single object

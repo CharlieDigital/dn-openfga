@@ -51,4 +51,31 @@ public sealed record Subscription(
     (string UseAgentWorkflows, string UseAiChat) Perform
 ) : IResource;
 
+
+// Conditions which can be used in the model.
+public sealed record Conditions
+{
+    public OpenFga.Sdk.Model.RelationshipCondition ForActiveTrial(
+        TimeSpan trialDuration,
+        DateTime trialStart
+    )
+        => new() {
+            Name = "active_trial",
+            Context = new
+            {
+                trial_duration_init = $"{trialDuration.TotalSeconds}s",
+                trial_start_init = trialStart.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ")
+            }
+        };
+    public sealed record ReadContext
+    {
+        public object ActiveTrialContext(
+            DateTime currentTime
+        )
+            => new
+            {
+                current_time_provided = currentTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ")
+            };
+    }
+}
 #pragma warning restore SA1600 // Auto-generated code

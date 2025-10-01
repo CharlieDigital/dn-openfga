@@ -101,6 +101,6 @@ type subscription
     define use_agent_workflows: paid or enterprise
 
 # A condition we use to determine if the free trial is still active
-condition active_trial(current_time: timestamp, trial_start: timestamp, trial_duration: duration) {
-  current_time < trial_start + trial_duration
+condition active_trial(current_time_provided: timestamp, trial_start_init: timestamp, trial_duration_init: duration) {
+  current_time_provided < trial_start_init + trial_duration_init
 }

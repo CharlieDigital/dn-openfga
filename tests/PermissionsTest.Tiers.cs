@@ -24,8 +24,8 @@ public partial class PermissionsTest
                         Name = "active_trial",
                         Context = new
                         {
-                            trial_start = "2026-01-01T00:00:00Z",
-                            trial_duration = "240h",
+                            trial_start_init = "2026-01-01T00:00:00Z",
+                            trial_duration_init = "240h",
                         },
                     },
                 },
@@ -41,7 +41,7 @@ public partial class PermissionsTest
                 Object = "subscription:sub_1234",
                 Relation = "free_trial",
                 User = "team:acme_corp_1000",
-                Context = new { current_time = "2026-01-02T00:00:00Z" },
+                Context = new { current_time_provided = "2026-01-02T00:00:00Z" },
             },
             cancellationToken: CancellationToken.None
         );
@@ -55,7 +55,7 @@ public partial class PermissionsTest
                 Object = "subscription:sub_1234",
                 Relation = "free_trial",
                 User = "team:acme_corp_1000",
-                Context = new { current_time = "2026-01-20T00:00:00Z" },
+                Context = new { current_time_provided = "2026-01-20T00:00:00Z" },
             },
             cancellationToken: CancellationToken.None
         );

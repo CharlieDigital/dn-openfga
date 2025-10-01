@@ -79,7 +79,8 @@ Target(
         var json = File.ReadAllText(Path.Combine("tests", "fga-model.json"));
 
         // Read the type definitions from the JSON
-        var types = WriteAuthorizationModelRequest.FromJson(json).TypeDefinitions;
+        var model = WriteAuthorizationModelRequest.FromJson(json);
+        var types = model.TypeDefinitions;
 
         var buffer = new StringBuilder();
         buffer.AppendLine("// This file is auto-generated from fga-model.fga");
@@ -169,6 +170,27 @@ Target(
             );
         }
 
+        buffer.AppendLine();
+        buffer.AppendLine("// Conditions which can be used in the model.");
+        buffer.AppendLine("public sealed record Conditions");
+        buffer.AppendLine("{");
+
+        var contextBuffer = new StringBuilder();
+
+        // Now build conditions
+        foreach (var (name, condition) in model.Conditions ?? [])
+        {
+            AddConditionToBuffer(condition, name, buffer, contextBuffer);
+        }
+
+        // Add the context section
+        buffer.AppendLine("    public sealed record ReadContext");
+        buffer.AppendLine("    {");
+        buffer.Append(contextBuffer.ToString());
+        buffer.AppendLine("    }");
+
+        buffer.AppendLine("}");
+
         buffer.AppendLine("#pragma warning restore SA1600 // Auto-generated code");
 
         var code = buffer.ToString();
@@ -178,9 +200,110 @@ Target(
 
         // Write to the tests/Models/PermissionScopes.g.cs file
         File.WriteAllText(Path.Combine("tests", "Models", "PermissionScopes.g.cs"), code);
+
+        // Function used above to build a standalone condition.
+        void AddConditionToBuffer(
+            Condition condition,
+            string name,
+            StringBuilder buffer,
+            StringBuilder contextBuffer
+        )
+        {
+            var parameterDeclarations = new StringBuilder();
+            var parameterConversions = new StringBuilder();
+
+            var contextDeclarations = new StringBuilder();
+            var contextAssignments = new StringBuilder();
+
+            var index = 0;
+            foreach (var param in condition.Parameters ?? [])
+            {
+                var variableName = param.Key.Replace("_init", string.Empty).Camelize();
+                var contextVariableName = param.Key.Replace("_provided", string.Empty).Camelize();
+
+                var conversionTarget = param.Key.EndsWith("_provided")
+                    ? contextVariableName
+                    : variableName;
+
+                var (type, conversion) = param.Value.TypeName switch
+                {
+                    TypeName.TIMESTAMP => (
+                        "DateTime",
+                        $"{conversionTarget}.ToString(\"yyyy-MM-dd'T'HH:mm:ss.fffZ\")"
+                    ),
+                    TypeName.INT => ("int", conversionTarget),
+                    TypeName.TypeName_BOOL => (
+                        "bool",
+                        $"Convert.ToString({conversionTarget}).ToLowerInvariant()"
+                    ),
+                    TypeName.DURATION => ("TimeSpan", $"$\"{{{conversionTarget}.TotalSeconds}}s\""),
+                    _ => ("string", $"Convert.ToString({conversionTarget})"),
+                };
+
+                if (param.Key.EndsWith("_provided"))
+                {
+                    contextDeclarations.AppendLine($"{type} {contextVariableName},");
+                    contextAssignments.AppendLine($"{param.Key} = {conversion},");
+
+                    continue; // We only model the _init parameters
+                }
+
+                var declarationPadding = index == 0 ? string.Empty : new string(' ', 8);
+                var conversionPadding = index == 0 ? string.Empty : new string(' ', 16);
+
+                parameterDeclarations.AppendLine($"{declarationPadding}{type} {variableName},");
+                parameterConversions.AppendLine($"{conversionPadding}{param.Key} = {conversion},");
+                index++;
+            }
+
+            var codeBlock = $$"""
+                public OpenFga.Sdk.Model.RelationshipCondition For{{name.Pascalize()}}(
+                    {{parameterDeclarations.Remove(parameterDeclarations.Length - 2, 2)}}
+                )
+                    => new() {
+                        Name = "{{name}}",
+                        Context = new
+                        {
+                            {{parameterConversions.Remove(parameterConversions.Length - 2, 2)}}
+                        }
+                    };
+            """;
+
+            buffer.AppendLine(codeBlock);
+
+            contextBuffer.AppendLine(
+                $$"""
+                        public object {{name.Pascalize()}}Context(
+                            {{contextDeclarations.Remove(contextDeclarations.Length - 2, 2)}}
+                        )
+                            => new
+                            {
+                                {{contextAssignments.Remove(contextAssignments.Length - 2, 2)}}
+                            };
+                """
+            );
+        }
     }
 );
 
 Target("default", dependsOn: ["transform-fga", "create-model"]);
 
 await RunTargetsAndExitAsync(args);
+
+/* Example condition
+public sealed record Conditions
+{
+    public static RelationshipCondition ForActiveTrial(
+        DateTime trialStart,
+        TimeSpan trialDuration
+    )
+        => new() {
+            Name = "active_trial",
+            Context = new
+            {
+                trial_start = trialStart.ToString("o"),
+                trial_duration = $"{trialDuration.TotalSeconds}s",
+            }
+        };
+}
+*/
