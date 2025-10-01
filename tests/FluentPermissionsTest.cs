@@ -5,9 +5,9 @@ public partial class FluentPermissionsTest
 {
     private static readonly string STORE_ID = "forms-permissions-store";
 
-    private readonly FormsPermissionsFixture _fixture;
+    private readonly PermissionsFixture _fixture;
 
-    public FluentPermissionsTest(FormsPermissionsFixture fixture)
+    public FluentPermissionsTest(PermissionsFixture fixture)
     {
         _fixture = fixture;
     }

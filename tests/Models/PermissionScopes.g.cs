@@ -43,4 +43,11 @@ public sealed record CrmPerson(
     (string Edit, string Owner, string Read) Perform
 ) : IResource;
 
+public sealed record Subscription(
+    string Enterprise,
+    string FreeTrial,
+    string Paid,
+    (string UseAgentWorkflows, string UseAiChat) Perform
+) : IResource;
+
 #pragma warning restore SA1600 // Auto-generated code

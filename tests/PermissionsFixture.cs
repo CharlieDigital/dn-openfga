@@ -4,13 +4,13 @@ using OpenFga.Sdk.Model;
 
 namespace tests;
 
-public class FormsPermissionsFixture : IDisposable
+public class PermissionsFixture : IDisposable
 {
     private readonly Lock _lock = new();
     private OpenFgaClient? _client;
     private string _modelId = string.Empty;
 
-    public FormsPermissionsFixture() { }
+    public PermissionsFixture() { }
 
     /// <summary>
     /// Constructs a singleton-per-test collection client with the store ID.
@@ -85,4 +85,4 @@ public class FormsPermissionsFixture : IDisposable
 }
 
 [CollectionDefinition("PermissionsCollection")]
-public class FormsPermissionsCollection : ICollectionFixture<FormsPermissionsFixture> { }
+public class FormsPermissionsCollection : ICollectionFixture<PermissionsFixture> { }

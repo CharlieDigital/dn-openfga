@@ -4,13 +4,13 @@ using OpenFga.Sdk.Exceptions;
 namespace tests;
 
 [Collection("PermissionsCollection")]
-public class FormsPermissionsTest
+public partial class PermissionsTest
 {
     private static readonly string STORE_ID = "forms-permissions-store";
 
-    private readonly FormsPermissionsFixture _fixture;
+    private readonly PermissionsFixture _fixture;
 
-    public FormsPermissionsTest(FormsPermissionsFixture fixture)
+    public PermissionsTest(PermissionsFixture fixture)
     {
         _fixture = fixture;
     }

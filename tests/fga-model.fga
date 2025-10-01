@@ -11,7 +11,7 @@ type user
 type group
   relations
     define member: [user]         # Direct membership: users can belong to groups
-    define team: [team]             # Hierarchy: groups can belong to teamanizations
+    define team: [team]             # Hierarchy: groups can belong to teams
 
 type team
   relations
@@ -71,6 +71,7 @@ type crm_company
     # Define the permissions and the members associated with the permission
     # Note: blocking applies to users who are directly blocked OR members of blocked groups
     define read: ((member from owner) but not (blocked or (member from blocked))) or ((reader) but not (blocked)) or ((editor) but not (blocked)) or ((owner) but not (blocked)) or ((member from reader) but not (blocked or (member from blocked))) or ((member from editor) but not (blocked or (member from blocked)))
+
     define edit: ((member from owner) but not (blocked or (member from blocked))) or ((editor) but not (blocked)) or ((member from editor) but not (blocked or (member from blocked)))
 
 type crm_person
@@ -83,3 +84,22 @@ type crm_person
     # Inherit permissions from the parent company
     define read: read from parent or owner
     define edit: edit from parent or owner
+
+# Modeling of tiers and capabilities only for user and team
+# See: https://docs.fga.dev/modeling/basics/conditions
+# Entitlements: https://openfga.dev/docs/modeling/advanced/entitlements
+type subscription
+  relations
+    # These are our tiers
+    define free_trial: [user, user with active_trial, team, team with active_trial]
+    define paid: [user, team]
+    define enterprise: [user, team]
+
+    # Now we can define capabilities based on tiers
+    define use_ai_chat: free_trial or paid or enterprise
+    define use_agent_workflows: paid or enterprise
+
+# A condition we use to determine if the free trial is still active
+condition active_trial(current_time: timestamp, trial_start: timestamp, trial_duration: duration) {
+  current_time < trial_start + trial_duration
+}
