@@ -22,7 +22,11 @@ public partial class PermissionsTest
                     Condition = new()
                     {
                         Name = "active_trial",
-                        Context = new { trial_start = "2026-01-01", trial_duration = "30d" },
+                        Context = new
+                        {
+                            trial_start = "2026-01-01T00:00:00Z",
+                            trial_duration = "240h",
+                        },
                     },
                 },
             ],
@@ -31,17 +35,31 @@ public partial class PermissionsTest
         await client.Write(request, cancellationToken: CancellationToken.None);
 
         // Now we check using a condition
-        var checkResponse = await client.Check(
+        var checkResponseWithin10Days = await client.Check(
             new ClientCheckRequest
             {
                 Object = "subscription:sub_1234",
                 Relation = "free_trial",
                 User = "team:acme_corp_1000",
-                Context = new { Context = new { current_date = "2026-01-15" } },
+                Context = new { current_time = "2026-01-02T00:00:00Z" },
             },
             cancellationToken: CancellationToken.None
         );
 
-        Assert.True(checkResponse.Allowed);
+        Assert.True(checkResponseWithin10Days.Allowed);
+
+        // Now we check using a condition
+        var checkResponseBeyond10Days = await client.Check(
+            new ClientCheckRequest
+            {
+                Object = "subscription:sub_1234",
+                Relation = "free_trial",
+                User = "team:acme_corp_1000",
+                Context = new { current_time = "2026-01-20T00:00:00Z" },
+            },
+            cancellationToken: CancellationToken.None
+        );
+
+        Assert.False(checkResponseBeyond10Days.Allowed);
     }
 }

@@ -62,6 +62,7 @@ public class PermissionsFixture : IDisposable
                     {
                         SchemaVersion = modelRequest.SchemaVersion,
                         TypeDefinitions = modelRequest.TypeDefinitions,
+                        Conditions = modelRequest.Conditions,
                     }
                 )
                 .Result;

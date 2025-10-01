@@ -38,6 +38,7 @@ public sealed record CrmCompany(
 
 public sealed record CrmPerson(
     string Editor,
+    string External,
     string Parent,
     string Reader,
     (string Edit, string Owner, string Read) Perform

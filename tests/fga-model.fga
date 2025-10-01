@@ -79,10 +79,11 @@ type crm_person
     define parent: [crm_company]
     define reader: [user, group, team]
     define editor: [user, group, team]
+    define external: [user]
     define owner: owner from parent # We can delegate this to the parent
 
     # Inherit permissions from the parent company
-    define read: read from parent or owner
+    define read: read from parent or owner or external
     define edit: edit from parent or owner
 
 # Modeling of tiers and capabilities only for user and team
@@ -91,7 +92,7 @@ type crm_person
 type subscription
   relations
     # These are our tiers
-    define free_trial: [user, user with active_trial, team, team with active_trial]
+    define free_trial: [user with active_trial, team with active_trial]
     define paid: [user, team]
     define enterprise: [user, team]
 
